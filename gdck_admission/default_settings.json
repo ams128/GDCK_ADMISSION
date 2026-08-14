@@ -1,0 +1,57 @@
+{
+  "default_folder": "",
+  "fees": {
+    "BDS": {
+      "Tuition Fee": "20840",
+      "Misc. Fee": "1740",
+      "Caution Deposit (Refundable)": "2320",
+      "Van Fee": "1740",
+      "University Fee": "2665",
+      "Verification Fee": "100",
+      "Fee for SC/ST/OEC Students": "5085",
+      "Total": "29405"
+    },
+    "MDS": {
+      "Tuition Fee": "",
+      "Misc. Fee": "",
+      "Caution Deposit (Refundable)": "",
+      "Van Fee": "",
+      "University Fee": "",
+      "Verification Fee": "",
+      "Fee for SC/ST/OEC Students": "",
+      "Total": ""
+    },
+    "DORA": {
+      "Tuition Fee": "",
+      "Misc. Fee": "",
+      "Caution Deposit (Refundable)": "",
+      "Van Fee": "",
+      "University Fee": "",
+      "Verification Fee": "",
+      "Fee for SC/ST/OEC Students": "",
+      "Total": ""
+    },
+    "DCDM": {
+      "Tuition Fee": "",
+      "Misc. Fee": "",
+      "Caution Deposit (Refundable)": "",
+      "Van Fee": "",
+      "University Fee": "",
+      "Verification Fee": "",
+      "Fee for SC/ST/OEC Students": "",
+      "Total": ""
+    }
+  },
+  "printer": "Windows default printer",
+  "google_sheet": {
+    "url": "",
+    "name_column": "Name"
+  },
+  "receipt": {
+    "admission_year": "2026",
+    "principal_name": "Manoj Joseph Michel"
+  },
+  "google_drive": {
+    "credentials_file": ""
+  }
+}

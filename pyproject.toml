@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gdck-admission"
+version = "0.1.0"
+description = "Desktop application for GDCK admission workflows."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pillow",
+    "pypdf",
+    "reportlab",
+    "google-api-python-client",
+    "google-auth-httplib2",
+    "google-auth-oauthlib",
+]
+
+[project.gui-scripts]
+gdck-admission = "gdck_admission.app:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["gdck_admission*"]
+
+[tool.setuptools.package-data]
+gdck_admission = [
+    "default_settings.json",
+    "tools/windows_ocr.ps1",
+]

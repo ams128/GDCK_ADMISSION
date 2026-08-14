@@ -1,0 +1,12 @@
+google_drive_token.json
+client_secret*.json
+credentials*.json
+settings.json
+receipts/
+tmp/
+__pycache__/
+*.py[cod]
+build/
+dist/
+*.egg-info/
+.venv/

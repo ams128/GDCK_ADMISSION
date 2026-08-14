@@ -43,6 +43,15 @@ The packaged app includes the Windows OCR helper and default settings. Live sett
 Google Drive login tokens, and generated receipts are stored in the user's application
 data folder instead of inside the installed package.
 
+## Publish to GitHub
+
+Create an empty GitHub repository, then connect and push this local project:
+
+```powershell
+git remote add origin https://github.com/YOUR-USERNAME/GDCK_ADMISSION.git
+git push -u origin main
+```
+
 The application opens a main panel with two buttons:
 
 - Academic Section

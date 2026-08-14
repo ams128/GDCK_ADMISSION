@@ -25,7 +25,7 @@ gdck-admission
 
 On Windows, you can also run the installer script. It checks for Python, installs
 Python with winget when missing, then installs this application and its
-dependencies:
+dependencies, and creates a **GDCK Admission** desktop shortcut:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass

@@ -38,6 +38,7 @@ DATA_DIR = user_data_dir()
 CONFIG_FILE = DATA_DIR / "settings.json"
 LEGACY_CONFIG_FILE = PACKAGE_DIR.parent / "settings.json"
 DEFAULT_CONFIG_FILE = PACKAGE_DIR / "default_settings.json"
+APP_ICON_FILE = PACKAGE_DIR / "assets" / "app.ico"
 RECEIPT_DIR = DATA_DIR / "receipts"
 GOOGLE_DRIVE_TOKEN_FILE = DATA_DIR / "google_drive_token.json"
 GOOGLE_DRIVE_SCOPES = (
@@ -1769,6 +1770,11 @@ class AdmissionApp(tk.Tk):
 def main():
     try:
         app = AdmissionApp()
+        if APP_ICON_FILE.exists():
+            try:
+                app.iconbitmap(default=str(APP_ICON_FILE))
+            except tk.TclError:
+                pass
         app.mainloop()
     except KeyboardInterrupt:
         pass

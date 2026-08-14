@@ -26,6 +26,7 @@ include = ["gdck_admission*"]
 
 [tool.setuptools.package-data]
 gdck_admission = [
+    "assets/app.ico",
     "default_settings.json",
     "tools/windows_ocr.ps1",
 ]

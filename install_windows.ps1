@@ -108,6 +108,77 @@ function Add-UserScriptsToPath {
     }
 }
 
+function Get-UserScriptsPath {
+    param([string[]]$PythonCommand)
+
+    $userBase = Invoke-Python -PythonCommand $PythonCommand -Arguments @("-m", "site", "--user-base")
+    if ($LASTEXITCODE -eq 0 -and $userBase) {
+        return Join-Path ($userBase | Select-Object -First 1) "Scripts"
+    }
+
+    return $null
+}
+
+function Get-InstalledAppCommandPath {
+    param([string[]]$PythonCommand)
+
+    $command = Get-Command gdck-admission -ErrorAction SilentlyContinue
+    if ($command) {
+        return $command.Source
+    }
+
+    $scriptsPath = Get-UserScriptsPath -PythonCommand $PythonCommand
+    if ($scriptsPath) {
+        $candidate = Join-Path $scriptsPath "gdck-admission.exe"
+        if (Test-Path $candidate) {
+            return $candidate
+        }
+        $candidate = Join-Path $scriptsPath "gdck-admission-script.py"
+        if (Test-Path $candidate) {
+            return $candidate
+        }
+    }
+
+    return $null
+}
+
+function Get-PackageIconPath {
+    param([string[]]$PythonCommand)
+
+    $output = Invoke-Python -PythonCommand $PythonCommand -Arguments @(
+        "-c",
+        "from gdck_admission.app import APP_ICON_FILE; print(APP_ICON_FILE)"
+    )
+    if ($LASTEXITCODE -eq 0 -and $output) {
+        $iconPath = ($output | Select-Object -First 1).Trim()
+        if (Test-Path $iconPath) {
+            return $iconPath
+        }
+    }
+
+    return Join-Path $projectRoot "gdck_admission\assets\app.ico"
+}
+
+function New-DesktopShortcut {
+    param(
+        [string]$TargetPath,
+        [string]$IconPath
+    )
+
+    $desktop = [Environment]::GetFolderPath("Desktop")
+    $shortcutPath = Join-Path $desktop "GDCK Admission.lnk"
+    $shell = New-Object -ComObject WScript.Shell
+    $shortcut = $shell.CreateShortcut($shortcutPath)
+    $shortcut.TargetPath = $TargetPath
+    $shortcut.WorkingDirectory = [Environment]::GetFolderPath("UserProfile")
+    if ($IconPath -and (Test-Path $IconPath)) {
+        $shortcut.IconLocation = $IconPath
+    }
+    $shortcut.Description = "Open GDCK Admission"
+    $shortcut.Save()
+    return $shortcutPath
+}
+
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $projectRoot
 
@@ -140,9 +211,14 @@ Invoke-Python -PythonCommand $pythonCommand -Arguments $installArgs
 Add-UserScriptsToPath -PythonCommand $pythonCommand
 
 Write-Step "Checking installed command"
-$command = Get-Command gdck-admission -ErrorAction SilentlyContinue
-if ($command) {
-    Write-Host "Installed command: $($command.Source)" -ForegroundColor Green
+$commandPath = Get-InstalledAppCommandPath -PythonCommand $pythonCommand
+if ($commandPath) {
+    Write-Host "Installed command: $commandPath" -ForegroundColor Green
+
+    Write-Step "Creating desktop shortcut"
+    $iconPath = Get-PackageIconPath -PythonCommand $pythonCommand
+    $shortcutPath = New-DesktopShortcut -TargetPath $commandPath -IconPath $iconPath
+    Write-Host "Desktop shortcut: $shortcutPath" -ForegroundColor Green
 }
 else {
     Write-Host "The app was installed, but gdck-admission is not on this PowerShell PATH yet." -ForegroundColor Yellow

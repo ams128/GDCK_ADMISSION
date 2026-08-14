@@ -45,6 +45,7 @@ GOOGLE_DRIVE_SCOPES = (
     "https://www.googleapis.com/auth/spreadsheets.readonly",
 )
 DEFAULT_PRINTER_LABEL = "Windows default printer"
+FIXED_ID_CARD_FEE = "150"
 FEE_FIELDS = (
     "Tuition Fee",
     "Misc. Fee",
@@ -72,9 +73,9 @@ DEFAULT_FEES = {
         "Van Fee": "1740",
         "University Fee": "2665",
         "Verification Fee": "100",
-        "ID Card Fee": "",
+        "ID Card Fee": FIXED_ID_CARD_FEE,
         "Fee for SC/ST/OEC Students": "5085",
-        "Total": "29405",
+        "Total": "29555",
     },
     "MDS": {},
     "DORA": {},
@@ -386,6 +387,20 @@ def default_fee_settings():
     for course in COURSES:
         course_defaults = DEFAULT_FEES.get(course, {})
         fees[course] = {field: course_defaults.get(field, "") for field in FEE_FIELDS}
+    return normalize_fee_settings(fees)
+
+
+def normalize_fee_settings(fees):
+    for course in COURSES:
+        course_fees = fees.setdefault(course, {})
+        course_fees["ID Card Fee"] = FIXED_ID_CARD_FEE
+        component_values = []
+        for field in BASE_TOTAL_FIELDS:
+            value = str(course_fees.get(field, "")).strip().replace(",", "")
+            if value.isdigit():
+                component_values.append(int(value))
+        if len(component_values) == len(BASE_TOTAL_FIELDS):
+            course_fees["Total"] = str(sum(component_values) + int(FIXED_ID_CARD_FEE))
     return fees
 
 
@@ -430,12 +445,12 @@ def load_fee_settings():
                     value = saved_course.get(field)
                     if value is not None:
                         fees[course][field] = str(value)
-    return fees
+    return normalize_fee_settings(fees)
 
 
 def save_fee_settings(fees):
     data = load_settings()
-    data["fees"] = fees
+    data["fees"] = normalize_fee_settings(fees)
     save_settings(data)
 
 
@@ -1305,10 +1320,9 @@ class AdmissionApp(tk.Tk):
             style="Input.TEntry",
             width=11,
             justify="right",
+            state="readonly",
         )
         id_card_entry.pack(side="right")
-        id_card_entry.bind("<Return>", self.save_tuition_fee)
-        id_card_entry.bind("<FocusOut>", self.save_tuition_fee)
         ttk.Label(fee_box, textvariable=self.fee_text, style="Summary.TLabel", justify="left").pack(anchor="w")
 
         ttk.Separator(panel).pack(fill="x", pady=(0, 10))
@@ -1467,18 +1481,13 @@ class AdmissionApp(tk.Tk):
     def update_course_fee_controls(self, _event=None):
         course = self.selected_course.get()
         self.tuition_fee.set(self.fee_settings.get(course, {}).get("Tuition Fee", ""))
-        self.id_card_fee.set(self.fee_settings.get(course, {}).get("ID Card Fee", ""))
+        self.id_card_fee.set(FIXED_ID_CARD_FEE)
+        self.fee_settings.setdefault(course, {})["ID Card Fee"] = FIXED_ID_CARD_FEE
         self.update_fee_display()
 
     def save_tuition_fee(self, _event=None):
         course = self.selected_course.get()
         raw_value = self.tuition_fee.get().strip().replace(",", "")
-        id_card_value = self.id_card_fee.get().strip().replace(",", "")
-        if id_card_value and not id_card_value.isdigit():
-            current_value = self.fee_settings.get(course, {}).get("ID Card Fee", "")
-            self.id_card_fee.set(current_value)
-            messagebox.showwarning("Invalid ID Card Fee", "Enter the ID card fee using numbers only.")
-            return False
         if raw_value and not raw_value.isdigit():
             current_value = self.fee_settings.get(course, {}).get("Tuition Fee", "")
             self.tuition_fee.set(current_value)
@@ -1486,16 +1495,16 @@ class AdmissionApp(tk.Tk):
             return False
 
         self.tuition_fee.set(raw_value)
-        self.id_card_fee.set(id_card_value)
+        self.id_card_fee.set(FIXED_ID_CARD_FEE)
         self.fee_settings.setdefault(course, {})["Tuition Fee"] = raw_value
-        self.fee_settings[course]["ID Card Fee"] = id_card_value
+        self.fee_settings[course]["ID Card Fee"] = FIXED_ID_CARD_FEE
         component_values = []
         for field in BASE_TOTAL_FIELDS:
             value = str(self.fee_settings[course].get(field, "")).strip().replace(",", "")
             if value.isdigit():
                 component_values.append(int(value))
         if len(component_values) == len(BASE_TOTAL_FIELDS):
-            self.fee_settings[course]["Total"] = str(sum(component_values) + int(id_card_value or 0))
+            self.fee_settings[course]["Total"] = str(sum(component_values) + int(FIXED_ID_CARD_FEE))
         save_fee_settings(self.fee_settings)
         self.update_fee_display()
         if not raw_value and _event is None:
@@ -1591,6 +1600,7 @@ class AdmissionApp(tk.Tk):
             course: {field: self.fee_settings.get(course, {}).get(field, "") for field in FEE_FIELDS}
             for course in COURSES
         }
+        normalize_fee_settings(fee_drafts)
         fee_entry_vars = {field: tk.StringVar() for field in FEE_FIELDS}
         active_fee_course = {"value": selected_settings_course.get()}
         for index, field in enumerate(FEE_FIELDS):
@@ -1600,7 +1610,8 @@ class AdmissionApp(tk.Tk):
             ttk.Label(fee_frame, text=field, style="Body.TLabel").grid(
                 row=row, column=label_column, sticky="w", pady=7, padx=(0 if label_column == 0 else 18, 10)
             )
-            ttk.Entry(fee_frame, textvariable=fee_entry_vars[field], style="Input.TEntry").grid(
+            entry_state = "readonly" if field == "ID Card Fee" else "normal"
+            ttk.Entry(fee_frame, textvariable=fee_entry_vars[field], style="Input.TEntry", state=entry_state).grid(
                 row=row, column=entry_column, sticky="ew", pady=7
             )
         fee_frame.columnconfigure(1, weight=1)
@@ -1609,11 +1620,14 @@ class AdmissionApp(tk.Tk):
         def store_active_fee_values():
             course = active_fee_course["value"]
             fee_drafts[course] = {field: fee_entry_vars[field].get().strip() for field in FEE_FIELDS}
+            fee_drafts[course]["ID Card Fee"] = FIXED_ID_CARD_FEE
+            normalize_fee_settings(fee_drafts)
 
         def load_selected_fee_values(_event=None):
             store_active_fee_values()
             course = selected_settings_course.get()
             active_fee_course["value"] = course
+            fee_drafts[course]["ID Card Fee"] = FIXED_ID_CARD_FEE
             for field in FEE_FIELDS:
                 fee_entry_vars[field].set(fee_drafts[course][field])
 

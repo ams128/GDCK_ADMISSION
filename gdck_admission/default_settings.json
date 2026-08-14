@@ -8,8 +8,9 @@
       "Van Fee": "1740",
       "University Fee": "2665",
       "Verification Fee": "100",
+      "ID Card Fee": "150",
       "Fee for SC/ST/OEC Students": "5085",
-      "Total": "29405"
+      "Total": "29555"
     },
     "MDS": {
       "Tuition Fee": "",
@@ -18,6 +19,7 @@
       "Van Fee": "",
       "University Fee": "",
       "Verification Fee": "",
+      "ID Card Fee": "150",
       "Fee for SC/ST/OEC Students": "",
       "Total": ""
     },
@@ -28,6 +30,7 @@
       "Van Fee": "",
       "University Fee": "",
       "Verification Fee": "",
+      "ID Card Fee": "150",
       "Fee for SC/ST/OEC Students": "",
       "Total": ""
     },
@@ -38,6 +41,7 @@
       "Van Fee": "",
       "University Fee": "",
       "Verification Fee": "",
+      "ID Card Fee": "150",
       "Fee for SC/ST/OEC Students": "",
       "Total": ""
     }

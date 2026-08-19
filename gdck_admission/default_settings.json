@@ -56,6 +56,11 @@
     "principal_name": "Manoj Joseph Michel"
   },
   "google_drive": {
-    "credentials_file": ""
+    "credentials_file": "",
+    "app_folder_id": ""
+  },
+  "app_update": {
+    "enabled": true,
+    "github_repo": ""
   }
 }

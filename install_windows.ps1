@@ -162,7 +162,9 @@ function Get-PackageIconPath {
 function New-DesktopShortcut {
     param(
         [string]$TargetPath,
-        [string]$IconPath
+        [string]$IconPath,
+        [string]$Arguments = "",
+        [string]$WorkingDirectory = ""
     )
 
     $desktop = [Environment]::GetFolderPath("Desktop")
@@ -170,13 +172,40 @@ function New-DesktopShortcut {
     $shell = New-Object -ComObject WScript.Shell
     $shortcut = $shell.CreateShortcut($shortcutPath)
     $shortcut.TargetPath = $TargetPath
-    $shortcut.WorkingDirectory = [Environment]::GetFolderPath("UserProfile")
+    if ($Arguments) {
+        $shortcut.Arguments = $Arguments
+    }
+    if ($WorkingDirectory) {
+        $shortcut.WorkingDirectory = $WorkingDirectory
+    }
+    else {
+        $shortcut.WorkingDirectory = [Environment]::GetFolderPath("UserProfile")
+    }
     if ($IconPath -and (Test-Path $IconPath)) {
-        $shortcut.IconLocation = $IconPath
+        $shortcut.IconLocation = "$IconPath,0"
     }
     $shortcut.Description = "Open GDCK Admission"
     $shortcut.Save()
     return $shortcutPath
+}
+
+function Get-PythonwPath {
+    param([string[]]$PythonCommand)
+
+    $pythonw = Get-Command pythonw.exe -ErrorAction SilentlyContinue
+    if ($pythonw) {
+        return $pythonw.Source
+    }
+
+    $pythonPath = $PythonCommand[0]
+    if ((Split-Path -Leaf $pythonPath) -ieq "python.exe") {
+        $candidate = Join-Path (Split-Path -Parent $pythonPath) "pythonw.exe"
+        if (Test-Path $candidate) {
+            return $candidate
+        }
+    }
+
+    return $pythonPath
 }
 
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -222,6 +251,16 @@ if ($commandPath) {
 }
 else {
     Write-Host "The app was installed, but gdck-admission is not on this PowerShell PATH yet." -ForegroundColor Yellow
+
+    Write-Step "Creating desktop shortcut"
+    $iconPath = Get-PackageIconPath -PythonCommand $pythonCommand
+    $pythonwPath = Get-PythonwPath -PythonCommand $pythonCommand
+    $shortcutPath = New-DesktopShortcut `
+        -TargetPath $pythonwPath `
+        -IconPath $iconPath `
+        -Arguments "-m gdck_admission" `
+        -WorkingDirectory $projectRoot
+    Write-Host "Desktop shortcut: $shortcutPath" -ForegroundColor Green
     Write-Host "Open a new PowerShell window, then run: gdck-admission"
 }
 
